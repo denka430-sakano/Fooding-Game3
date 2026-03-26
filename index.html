@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アクアリウム 餌やり道場</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap');
+
+  :root {
+    --ocean-deep: #0a1628;
+    --ocean-mid: #0d2b4a;
+    --ocean-light: #1a4a7a;
+    --water-blue: #1e90ff;
+    --aqua: #00e5ff;
+    --coral: #ff6b6b;
+    --coral-light: #ff8e8e;
+    --gold: #ffd700;
+    --green-good: #00e676;
+    --sand: #f5deb3;
+    --bubble: rgba(255,255,255,0.15);
+    --text-main: #e8f4ff;
+    --text-sub: #9ecde8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    background: var(--ocean-deep);
+    color: var(--text-main);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* 水中背景アニメーション */
+  .ocean-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(180deg, #0a1628 0%, #0d2b4a 40%, #0a3d62 100%);
+    overflow: hidden;
+  }
+
+  .bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--bubble);
+    animation: rise linear infinite;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  @keyframes rise {
+    0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 0.6; }
+    100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+  }
+
+  .seaweed {
+    position: absolute;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(to top, #1a5c2a, #2e8b57, #3cb371);
+    border-radius: 10px 10px 0 0;
+    transform-origin: bottom center;
+    animation: sway ease-in-out infinite;
+  }
+
+  @keyframes sway {
+    0%, 100% { transform: rotate(-8deg); }
+    50% { transform: rotate(8deg); }
+  }
+
+  .light-ray {
+    position: absolute;
+    top: 0;
+    width: 60px;
+    height: 60%;
+    background: linear-gradient(to bottom, rgba(30,144,255,0.08), transparent);
+    transform-origin: top center;
+    animation: shimmer 4s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0%, 100% { transform: skewX(-5deg) scaleX(1); opacity: 0.5; }
+    50% { transform: skewX(5deg) scaleX(1.3); opacity: 1; }
+  }
+
+  /* メインコンテナ */
+  .container {
+    position: relative;
+    z-index: 10;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 20px 16px 60px;
+  }
+
+  /* ヘッダー */
+  .header {
+    text-align: center;
+    padding: 30px 0 20px;
+    animation: fadeDown 0.8s ease;
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .header-fish {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 8px;
+    animation: swim 3s ease-in-out infinite;
+  }
+
+  @keyframes swim {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    25% { transform: translateX(6px) rotate(2deg); }
+    75% { transform: translateX(-6px) rotate(-2deg); }
+  }
+
+  .header h1 {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--aqua), var(--water-blue), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.3;
+  }
+
+  .header p {
+    color: var(--text-sub);
+    font-size: 0.85rem;
+    margin-top: 8px;
+  }
+
+  /* 水槽状態パネル */
+  .tank-panel {
+    background: rgba(13, 43, 74, 0.7);
+    border: 1px solid rgba(0, 229, 255, 0.25);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+    animation: fadeIn 0.6s ease 0.2s both;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .tank-title {
+    font-size: 0.75rem;
+    color: var(--aqua);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ステータスバー */
+  .status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .status-item {
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .status-label {
+    font-size: 0.72rem;
+    color: var(--text-sub);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .status-bar-wrap {
+    height: 8px;
+    background: rgba(0,0,0,0.4);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+
+  .status-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background 0.8s ease;
+  }
+
+  .status-value {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: right;
+  }
+
+  /* 水槽ビジュアル */
+  .tank-visual {
+    position: relative;
+    height: 110px;
+    background: linear-gradient(180deg, rgba(10,60,100,0.4) 0%, rgba(5,30,60,0.7) 100%);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    border: 1px solid rgba(30,144,255,0.2);
+  }
+
+  .tank-water-surface {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, rgba(0,229,255,0.5), transparent);
+    animation: wave 2s ease-in-out infinite;
+  }
+
+  @keyframes wave {
+    0%, 100% { transform: scaleX(1); }
+    50% { transform: scaleX(1.05); }
+  }
+
+  .tank-fish-container {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .tank-fish {
+    font-size: 1.8rem;
+    animation: tankSwim 4s ease-in-out infinite;
+    transition: filter 0.8s ease, transform 0.3s ease;
+  }
+
+  .tank-fish:nth-child(2) { animation-delay: -1.5s; font-size: 1.4rem; }
+  .tank-fish:nth-child(3) { animation-delay: -3s; font-size: 1.2rem; }
+
+  @keyframes tankSwim {
+    0%, 100% { transform: translateY(0) translateX(0); }
+    33% { transform: translateY(-8px) translateX(5px); }
+    66% { transform: translateY(5px) translateX(-5px); }
+  }
+
+  .food-particles {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    pointer-events: none;
+  }
+
+  .food-particle {
+    width: 5px;
+    height: 5px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: fall 2s ease-in infinite;
+    opacity: 0;
+  }
+
+  @keyframes fall {
+    0% { transform: translateY(-10px); opacity: 1; }
+    100% { transform: translateY(120px); opacity: 0.3; }
+  }
+
+  .tank-waste {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transition: height 0.8s ease, background 0.8s ease;
+    border-radius: 0 0 12px 12px;
+  }
+
+  /* ステップカード */
+  .step-card {
+    background: rgba(13, 43, 74, 0.75);
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 16px;
+    backdrop-filter: blur(10px);
+    animation: slideUp 0.5s ease both;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 229, 255, 0.12);
+    border: 1px solid rgba(0, 229, 255, 0.3);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.72rem;
+    color: var(--aqua);
+    margin-bottom: 14px;
+    letter-spacing: 0.05em;
+  }
+
+  .step-question {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.5;
+    margin-bottom: 8px;
+    color: var(--text-main);
+  }
+
+  .step-desc {
+    font-size: 0.82rem;
+    color: var(--text-sub);
+    line-height: 1.6;
+    margin-bottom: 18px;
+  }
+
+  /* 選択肢ボタン */
+  .options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .option-btn {
+    background: rgba(0,0,0,0.3);
+    border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 14px 16px;
+    color: var(--text-main);
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 0.92rem;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    line-height: 1.4;
+  }
+
+  .option-btn:hover {
+    background: rgba(30, 144, 255, 0.15);
+    border-color: rgba(0, 229, 255, 0.5);
+    transform: translateX(4px);
+  }
+
+  .option-btn.correct {
+    background: rgba(0, 230, 118, 0.15);
+    border-color: var(--green-good);
+    animation: correct-pulse 0.5s ease;
+  }
+
+  .option-btn.wrong {
+    background: rgba(255, 107, 107, 0.15);
+    border-color: var(--coral);
+    animation: wrong-shake 0.4s ease;
+  }
+
+  @keyframes correct-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes wrong-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  .option-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .option-text { flex: 1; }
+  .option-text strong { display: block; margin-bottom: 2px; }
+  .option-text span { font-size: 0.78rem; color: var(--text-sub); }
+
+  /* フィードバックパネル */
+  .feedback-panel {
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 14px;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .feedback-panel.correct-fb {
+    background: rgba(0, 230, 118, 0.1);
+    border: 1px solid rgba(0, 230, 118, 0.35);
+  }
+
+  .feedback-panel.wrong-fb {
+    background: rgba(255, 107, 107, 0.1);
+    border: 1px solid rgba(255, 107, 107, 0.35);
+  }
+
+  .feedback-header {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .feedback-text {
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--text-sub);
+  }
+
+  .feedback-text strong { color: var(--text-main); }
+
+  /* 次へボタン */
+  .next-btn {
+    display: none;
+    width: 100%;
+    margin-top: 14px;
+    background: linear-gradient(135deg, var(--water-blue), var(--aqua));
+    border: none;
+    border-radius: 14px;
+    padding: 14px;
+    color: #fff;
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    letter-spacing: 0.05em;
+  }
+
+  .next-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(30,144,255,0.4);
+  }
+
+  /* 進行バー */
+  .progress-bar-wrap {
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--water-blue), var(--aqua));
+    border-radius: 2px;
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* 結果画面 */
+  .result-screen {
+    display: none;
+    text-align: center;
+    padding: 30px 20px;
+    background: rgba(13, 43, 74, 0.8);
+    border: 1px solid rgba(0, 229, 255, 0.25);
+    border-radius: 24px;
+    backdrop-filter: blur(12px);
+    animation: fadeIn 0.6s ease;
+  }
+
+  .result-emoji { font-size: 4rem; margin-bottom: 16px; display: block; }
+
+  .result-title {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--aqua), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 10px;
+  }
+
+  .result-score {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--aqua);
+    margin: 16px 0 8px;
+  }
+
+  .result-score span { font-size: 1.2rem; color: var(--text-sub); }
+
+  .result-message {
+    font-size: 0.9rem;
+    color: var(--text-sub);
+    line-height: 1.7;
+    margin: 12px 0 24px;
+  }
+
+  .tips-box {
+    background: rgba(0,0,0,0.3);
+    border-radius: 14px;
+    padding: 16px;
+    text-align: left;
+    margin-bottom: 20px;
+  }
+
+  .tips-title {
+    font-size: 0.75rem;
+    color: var(--aqua);
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+
+  .tip-item {
+    display: flex;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--text-sub);
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+
+  .tip-item:last-child { margin-bottom: 0; }
+
+  .restart-btn {
+    background: linear-gradient(135deg, var(--water-blue), var(--aqua));
+    border: none;
+    border-radius: 14px;
+    padding: 14px 40px;
+    color: #fff;
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    letter-spacing: 0.05em;
+  }
+
+  .restart-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(30,144,255,0.4);
+  }
+
+  /* 警告アラート */
+  .alert-banner {
+    display: none;
+    background: rgba(255, 107, 107, 0.15);
+    border: 1px solid rgba(255, 107, 107, 0.4);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 0.82rem;
+    color: var(--coral-light);
+    line-height: 1.5;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .alert-banner.show { display: flex; gap: 8px; align-items: flex-start; }
+
+  /* レスポンシブ */
+  @media (max-width: 480px) {
+    .status-grid { grid-template-columns: 1fr 1fr; }
+    .header h1 { font-size: 1.3rem; }
+    .step-question { font-size: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 背景 -->
+<div class="ocean-bg" id="oceanBg"></div>
+
+<div class="container">
+  <!-- ヘッダー -->
+  <div class="header">
+    <span class="header-fish">🐠</span>
+    <h1>アクアリウム<br>餌やり道場</h1>
+    <p>餌の与えすぎが水槽に与える影響を学ぼう</p>
+  </div>
+
+  <!-- 進行バー -->
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+  </div>
+
+  <!-- 警告バナー -->
+  <div class="alert-banner" id="alertBanner">
+    <span>⚠️</span>
+    <span id="alertText"></span>
+  </div>
+
+  <!-- 水槽パネル -->
+  <div class="tank-panel" id="tankPanel">
+    <div class="tank-title">🔬 現在の水槽の状態</div>
+    <div class="tank-visual" id="tankVisual">
+      <div class="tank-water-surface"></div>
+      <div class="tank-fish-container" id="tankFishes">
+        <span class="tank-fish" id="fish1">🐟</span>
+        <span class="tank-fish" id="fish2">🐠</span>
+        <span class="tank-fish" id="fish3">🐡</span>
+      </div>
+      <div class="food-particles" id="foodParticles" style="display:none">
+        <div class="food-particle" style="animation-delay:0s"></div>
+        <div class="food-particle" style="animation-delay:0.3s"></div>
+        <div class="food-particle" style="animation-delay:0.6s"></div>
+        <div class="food-particle" style="animation-delay:0.9s"></div>
+      </div>
+      <div class="tank-waste" id="tankWaste" style="height:0px; background: rgba(100,60,0,0)"></div>
+    </div>
+    <div class="status-grid">
+      <div class="status-item">
+        <div class="status-label">💧 水質（アンモニア）</div>
+        <div class="status-bar-wrap">
+          <div class="status-bar" id="barAmmonia" style="width:10%; background: var(--green-good)"></div>
+        </div>
+        <div class="status-value" id="valAmmonia" style="color:var(--green-good)">良好</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">🫧 酸素量（DO）</div>
+        <div class="status-bar-wrap">
+          <div class="status-bar" id="barOxygen" style="width:90%; background: var(--aqua)"></div>
+        </div>
+        <div class="status-value" id="valOxygen" style="color:var(--aqua)">十分</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">🦠 苔・藻の繁殖</div>
+        <div class="status-bar-wrap">
+          <div class="status-bar" id="barAlgae" style="width:5%; background: #2e8b57"></div>
+        </div>
+        <div class="status-value" id="valAlgae" style="color:#2e8b57">なし</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">🐟 魚の健康度</div>
+        <div class="status-bar-wrap">
+          <div class="status-bar" id="barHealth" style="width:95%; background: var(--green-good)"></div>
+        </div>
+        <div class="status-value" id="valHealth" style="color:var(--green-good)">元気！</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 問題カード -->
+  <div id="questionArea"></div>
+
+  <!-- 結果画面 -->
+  <div class="result-screen" id="resultScreen">
+    <span class="result-emoji" id="resultEmoji">🏆</span>
+    <div class="result-title" id="resultTitle">学習完了！</div>
+    <div class="result-score" id="resultScore">0<span> / 6問</span></div>
+    <div class="result-message" id="resultMessage"></div>
+    <div class="tips-box">
+      <div class="tips-title">📋 今日の学びのまとめ</div>
+      <div class="tip-item"><span>🔴</span><span><strong>アンモニア中毒：</strong>残り餌が腐敗してアンモニアを発生させ、魚の鰓や神経にダメージを与えます。</span></div>
+      <div class="tip-item"><span>🟡</span><span><strong>酸素不足：</strong>バクテリアが残り餌を分解する際に大量の酸素を消費し、魚が窒息状態になります。</span></div>
+      <div class="tip-item"><span>🟢</span><span><strong>正しい量：</strong>2〜3分で食べ切れる量を1日1〜2回が基本。食べ残しは必ずスポイトで除去しましょう。</span></div>
+    </div>
+    <button class="restart-btn" onclick="restart()">🔄 もう一度チャレンジ</button>
+  </div>
+</div>
+
+<script>
+// --- データ ---
+const questions = [
+  {
+    id: 1,
+    badge: "基礎知識 Q1",
+    question: "魚に与える餌の適切な量はどのくらいでしょう？",
+    desc: "まずは基本から。適切な餌の量を選んでください。",
+    options: [
+      { icon: "🍽️", label: "食べ残すくらい多めに与える", sub: "「余るくらいが安心」という考え方", correct: false },
+      { icon: "⏱️", label: "2〜3分で食べ切れる量を1日1〜2回", sub: "消化しやすい適切な量", correct: true },
+      { icon: "💊", label: "栄養のため毎日5回以上与える", sub: "たくさん与えれば元気になる", correct: false },
+    ],
+    correctFb: "✅ 正解！「2〜3分で食べ切れる量」が鉄則です。食べ残しが出るとすぐに水質が悪化してしまいます。",
+    wrongFb: "❌ 残念！食べ残しが出るほど与えると、残り餌が腐敗して水質を急激に悪化させます。適量は「2〜3分で食べ切れる量」です。",
+    tankEffect: { ammonia: 10, oxygen: 90, algae: 5, health: 95, waste: 0, fishState: "normal" }
+  },
+  {
+    id: 2,
+    badge: "水質変化 Q2",
+    question: "餌を与えすぎると、水中で最初に何が増えるでしょう？",
+    desc: "食べ残しの餌が水中で分解されると、有毒な物質が発生します。",
+    options: [
+      { icon: "⚗️", label: "アンモニア（NH₃）", sub: "腐敗した有機物から発生する有毒ガス", correct: true },
+      { icon: "🧂", label: "塩分", sub: "海水が濃くなる", correct: false },
+      { icon: "💊", label: "カルシウム", sub: "水が硬くなる", correct: false },
+    ],
+    correctFb: "✅ 正解！残り餌はバクテリアに分解され、アンモニア（NH₃）を発生させます。アンモニアは少量でも魚に強いダメージを与える猛毒です。",
+    wrongFb: "❌ 正しくは「アンモニア」です。残り餌の腐敗でアンモニアが発生し、魚の鰓や神経系を直接傷つけます。",
+    tankEffect: { ammonia: 45, oxygen: 75, algae: 15, health: 70, waste: 8, fishState: "stressed" }
+  },
+  {
+    id: 3,
+    badge: "症状観察 Q3",
+    question: "アンモニア中毒になった魚が見せる症状は？",
+    desc: "早期発見が大切です。危険なサインを知りましょう。",
+    options: [
+      { icon: "🌊", label: "水面近くでパクパクする・体をこすりつける", sub: "苦しくて酸素を求めている行動", correct: true },
+      { icon: "🌀", label: "水槽の底でじっとしている", sub: "休んでいるだけ", correct: false },
+      { icon: "🎨", label: "体の色が鮮やかになる", sub: "元気な証拠", correct: false },
+    ],
+    correctFb: "✅ 正解！水面でパクパクする行動（鼻上げ）や体をこすりつける行動は、アンモニア中毒の典型的なサインです。すぐに水換えが必要です。",
+    wrongFb: "❌ 残念！水面でパクパクする「鼻上げ」行動が重要なサインです。アンモニアが鰓を傷つけ、呼吸困難になっているサインです。",
+    tankEffect: { ammonia: 65, oxygen: 55, algae: 30, health: 45, waste: 18, fishState: "sick" }
+  },
+  {
+    id: 4,
+    badge: "連鎖反応 Q4",
+    question: "餌のやりすぎが続くと、次に起きる問題は？",
+    desc: "水質悪化は連鎖的に広がります。次の問題を考えてみましょう。",
+    options: [
+      { icon: "🌿", label: "コケ・藻が大量発生する", sub: "栄養過多で植物・藻類が爆発的に増殖", correct: true },
+      { icon: "❄️", label: "水温が下がる", sub: "水が冷たくなる", correct: false },
+      { icon: "💎", label: "水が透明になる", sub: "水がきれいになる", correct: false },
+    ],
+    correctFb: "✅ 正解！残り餌→アンモニア→硝酸塩の増加→コケ・藻の爆発的繁殖、という連鎖が起きます。一度コケが繁殖すると駆除が非常に大変です。",
+    wrongFb: "❌ 正解は「コケ・藻の大量発生」です。余分な栄養（硝酸塩・リン酸塩）を藻類が吸収して爆発的に増殖します。水槽が緑や茶色に染まります。",
+    tankEffect: { ammonia: 80, oxygen: 40, algae: 65, health: 30, waste: 30, fishState: "sick" }
+  },
+  {
+    id: 5,
+    badge: "応急処置 Q5",
+    question: "餌を与えすぎた場合の正しい対処法は？",
+    desc: "もし与えすぎてしまったら、どう対処すればよいでしょうか？",
+    options: [
+      { icon: "💊", label: "魚病薬を大量に入れる", sub: "薬で解決しようとする", correct: false },
+      { icon: "🔄", label: "スポイトで残り餌を除去し、1/3ほど水換えをする", sub: "物理的に汚れを取り除く", correct: true },
+      { icon: "⏳", label: "しばらく様子を見る", sub: "自然に良くなるのを待つ", correct: false },
+    ],
+    correctFb: "✅ 正解！まずスポイトや網で残り餌を物理除去し、水槽の1/3程度を新鮮な水に換える「水換え」が最も効果的な応急処置です。",
+    wrongFb: "❌ 正解は「スポイトで残り餌を除去→水換え」です。薬は逆効果になることも。まずは物理的に汚れを取り除くことが最優先です。",
+    tankEffect: { ammonia: 90, oxygen: 25, algae: 75, health: 15, waste: 40, fishState: "danger" }
+  },
+  {
+    id: 6,
+    badge: "予防知識 Q6",
+    question: "餌の与えすぎを防ぐ最もよい方法は？",
+    desc: "予防が最善の策。日々の管理のコツを選んでください。",
+    options: [
+      { icon: "📅", label: "週に1度だけ大量に与える", sub: "まとめて与えれば楽", correct: false },
+      { icon: "🤖", label: "自動給餌器で量を固定し、食べ残しは毎回除去する", sub: "量を管理して残さを防ぐ", correct: true },
+      { icon: "🐟", label: "魚が欲しがるだけ与える", sub: "魚が喜ぶのが一番", correct: false },
+    ],
+    correctFb: "✅ 正解！自動給餌器で量を一定に管理し、食べ残しは必ずスポイトで除去する習慣が理想的です。魚は常に「もっとくれ」という反応をしますが、それが正常です。",
+    wrongFb: "❌ 正解は「自動給餌器＋残り餌除去」です。魚は満腹感が薄く、与えれば与えるほど食べようとします。人間が量をコントロールすることが重要です。",
+    tankEffect: { ammonia: 95, oxygen: 15, algae: 85, health: 5, waste: 50, fishState: "danger" }
+  }
+];
+
+// --- 状態 ---
+let currentQ = 0;
+let score = 0;
+let answered = false;
+
+// --- 背景バブル生成 ---
+function createBubbles() {
+  const bg = document.getElementById('oceanBg');
+  for (let i = 0; i < 20; i++) {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const size = Math.random() * 16 + 4;
+    b.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      animation-duration:${Math.random()*12+8}s;
+      animation-delay:${Math.random()*10}s;
+    `;
+    bg.appendChild(b);
+  }
+  for (let i = 0; i < 6; i++) {
+    const s = document.createElement('div');
+    s.className = 'seaweed';
+    const h = Math.random() * 60 + 30;
+    s.style.cssText = `
+      left:${Math.random()*100}%;
+      height:${h}px;
+      animation-duration:${Math.random()*2+2}s;
+      animation-delay:${Math.random()*2}s;
+    `;
+    bg.appendChild(s);
+  }
+  for (let i = 0; i < 5; i++) {
+    const r = document.createElement('div');
+    r.className = 'light-ray';
+    r.style.cssText = `
+      left:${Math.random()*80+5}%;
+      animation-duration:${Math.random()*3+3}s;
+      animation-delay:${Math.random()*3}s;
+    `;
+    bg.appendChild(r);
+  }
+}
+
+// --- 水槽状態更新 ---
+function updateTank(effect) {
+  const { ammonia, oxygen, algae, health, waste, fishState } = effect;
+
+  // バー更新
+  const setBar = (id, valId, val, thresholds, labels, colors) => {
+    document.getElementById(id).style.width = val + '%';
+    let idx = thresholds.findIndex(t => val <= t);
+    if (idx === -1) idx = thresholds.length - 1;
+    document.getElementById(id).style.background = colors[idx];
+    document.getElementById(valId).textContent = labels[idx];
+    document.getElementById(valId).style.color = colors[idx];
+  };
+
+  setBar('barAmmonia', 'valAmmonia', ammonia,
+    [20, 50, 75, 100],
+    ['良好', 'やや高い', '危険', '致死的'],
+    ['var(--green-good)', '#ffd700', 'orange', 'var(--coral)']
+  );
+  setBar('barOxygen', 'valOxygen', oxygen,
+    [30, 60, 85, 100],
+    ['不足！', '少ない', 'やや少', '十分'],
+    ['var(--coral)', 'orange', '#ffd700', 'var(--aqua)']
+  );
+  setBar('barAlgae', 'valAlgae', algae,
+    [20, 50, 75, 100],
+    ['なし', '少し', '多い', '大量！'],
+    ['#2e8b57', '#ffd700', 'orange', 'var(--coral)']
+  );
+  setBar('barHealth', 'valHealth', health,
+    [20, 45, 70, 100],
+    ['瀕死😵', '不調😟', 'やや不調', '元気！😊'],
+    ['var(--coral)', 'orange', '#ffd700', 'var(--green-good)']
+  );
+
+  // 堆積物
+  const tw = document.getElementById('tankWaste');
+  const wasteH = waste * 0.7;
+  const r = Math.floor(80 + waste * 0.3);
+  const g = Math.floor(50 - waste * 0.2);
+  tw.style.height = wasteH + 'px';
+  tw.style.background = `rgba(${r},${g},0,${Math.min(waste/100 * 0.7, 0.7)})`;
+
+  // 魚の状態
+  const fishes = [document.getElementById('fish1'), document.getElementById('fish2'), document.getElementById('fish3')];
+  const filterMap = { normal: 'none', stressed: 'hue-rotate(30deg) brightness(0.9)', sick: 'hue-rotate(60deg) brightness(0.7) grayscale(0.4)', danger: 'grayscale(0.8) brightness(0.5)' };
+  fishes.forEach(f => { if(f) f.style.filter = filterMap[fishState] || 'none'; });
+
+  // アラート
+  const alert = document.getElementById('alertBanner');
+  const alertText = document.getElementById('alertText');
+  if (ammonia > 60) {
+    alert.classList.add('show');
+    alertText.textContent = `水槽が危機的な状態です！アンモニア濃度が高く、魚が苦しんでいます。すぐに水換えが必要です。`;
+  } else if (ammonia > 30) {
+    alert.classList.add('show');
+    alertText.textContent = `水質が悪化し始めています。餌の与えすぎに注意してください。`;
+  } else {
+    alert.classList.remove('show');
+  }
+}
+
+// --- 問題表示 ---
+function showQuestion(idx) {
+  const q = questions[idx];
+  answered = false;
+
+  // プログレス
+  document.getElementById('progressBar').style.width = (idx / questions.length * 100) + '%';
+
+  // エリア描画
+  const area = document.getElementById('questionArea');
+  area.innerHTML = '';
+
+  const card = document.createElement('div');
+  card.className = 'step-card';
+  card.innerHTML = `
+    <div class="step-badge">🎓 ${q.badge}</div>
+    <div class="step-question">${q.question}</div>
+    <div class="step-desc">${q.desc}</div>
+    <div class="options-grid" id="optionsGrid">
+      ${q.options.map((o, i) => `
+        <button class="option-btn" onclick="selectOption(${i})" id="opt${i}">
+          <span class="option-icon">${o.icon}</span>
+          <span class="option-text"><strong>${o.label}</strong><span>${o.sub}</span></span>
+        </button>
+      `).join('')}
+    </div>
+    <div class="feedback-panel" id="feedbackPanel"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">
+      ${idx < questions.length - 1 ? '次の問題へ →' : '結果を見る 🏆'}
+    </button>
+  `;
+  area.appendChild(card);
+}
+
+// --- 選択肢クリック ---
+function selectOption(optIdx) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[currentQ];
+  const opt = q.options[optIdx];
+  const isCorrect = opt.correct;
+
+  if (isCorrect) score++;
+
+  // ボタン色変更
+  q.options.forEach((o, i) => {
+    const btn = document.getElementById('opt' + i);
+    if (btn) {
+      if (o.correct) btn.classList.add('correct');
+      else if (i === optIdx && !o.correct) btn.classList.add('wrong');
+    }
+  });
+
+  // フィードバック表示
+  const fb = document.getElementById('feedbackPanel');
+  fb.style.display = 'block';
+  fb.className = 'feedback-panel ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
+  fb.innerHTML = `
+    <div class="feedback-header">${isCorrect ? '✅ 正解！' : '❌ 不正解'}</div>
+    <div class="feedback-text">${isCorrect ? q.correctFb : q.wrongFb}</div>
+  `;
+
+  // 水槽更新
+  updateTank(q.tankEffect);
+
+  // 食べ残しアニメ
+  if (!isCorrect) {
+    const fp = document.getElementById('foodParticles');
+    if (fp) { fp.style.display = 'flex'; setTimeout(() => { fp.style.display = 'none'; }, 3000); }
+  }
+
+  // 次へボタン表示
+  document.getElementById('nextBtn').style.display = 'block';
+}
+
+// --- 次の問題 ---
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= questions.length) {
+    showResult();
+  } else {
+    showQuestion(currentQ);
+  }
+}
+
+// --- 結果表示 ---
+function showResult() {
+  document.getElementById('questionArea').innerHTML = '';
+  document.getElementById('progressBar').style.width = '100%';
+
+  const rs = document.getElementById('resultScreen');
+  rs.style.display = 'block';
+
+  const pct = score / questions.length;
+  let emoji, title, msg;
+  if (pct >= 0.9) { emoji = '🏆'; title = 'アクアリスト名人！'; msg = '素晴らしい！餌の与えすぎの危険性を完全に理解しています。あなたなら美しく健康的な水槽を長く維持できます。'; }
+  else if (pct >= 0.6) { emoji = '🐠'; title = '中級アクアリスト！'; msg = 'よく理解できています。いくつか苦手な部分を復習して、さらに知識を深めましょう！'; }
+  else { emoji = '🌱'; title = '水槽の見習い中！'; msg = '餌の与えすぎは水槽の大敵です。もう一度チャレンジして、大切な魚を守る知識を身につけましょう。'; }
+
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultScore').innerHTML = `${score}<span> / ${questions.length}問正解</span>`;
+  document.getElementById('resultMessage').textContent = msg;
+
+  // 水槽を良い状態に戻す
+  updateTank({ ammonia: 10, oxygen: 90, algae: 5, health: 95, waste: 0, fishState: 'normal' });
+  document.getElementById('alertBanner').classList.remove('show');
+}
+
+// --- リスタート ---
+function restart() {
+  currentQ = 0;
+  score = 0;
+  answered = false;
+  document.getElementById('resultScreen').style.display = 'none';
+  document.getElementById('alertBanner').classList.remove('show');
+  updateTank({ ammonia: 10, oxygen: 90, algae: 5, health: 95, waste: 0, fishState: 'normal' });
+  showQuestion(0);
+}
+
+// --- 初期化 ---
+createBubbles();
+showQuestion(0);
+</script>
+</body>
+</html>
